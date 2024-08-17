@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <style>
+    body{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        background-color: rgb(92, 90, 90);
+       
+    }
+    button{
+        background-color: #646cff;
+        color: #fff;
+        padding: 10px;
+        font-size: 20px;
+        border-radius: 5px;
+        border: none;
+    }
+    #start{
+        background-color: #646cff;
+        color: #fff;
+        padding: 10px;
+        font-size: 20px;
+        border-radius: 5px;
+        border: none;
+    }
+    
+    #app{
+        
+         background: #ffffff;
+         border-radius: 8px;
+         padding: 32px;
+        margin-top: 100px;
+         display: flex;
+         flex-direction: column;
+         gap: 12px;
+         width: min(100%, 500px);
+    }
+       .js{
+        background: yellow;
+        display: inline-block;
+        padding: 10px;
+       }
+       h1{
+        text-align: center;
+        
+       }
+       .answers{
+        display: flex;
+        flex-direction: column;
+       }
+       label{
+        padding: 12px;
+        display: block;
+        border: 2px solid #64748b;
+        border-radius: 4px;
+        margin: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        font-family: monospace;
+        font-size: 24px;
+       }
+       label :hover{
+        border-color: #646cff;
+       }
+
+       label :has(:checked) {
+        background-color: #646cff50;
+        border-color: #646cff;
+       }
+
+           progress{
+            width: 100%;
+          }
+
+      .correct{
+        background-color: #bbf7d0 !important;
+      }
+      .incorrect{
+        background-color: #fecaca !important;
+      }
+      .big-title{
+        font-size: 64px;
+        color: red;
+      }
+      .js{
+        background: yellow;
+        display: inline-block;
+        padding-left: 6px;
+        margin-left: -6px;
+        padding-right: 6px;
+        margin-right: -6px;
+      }
+    </style>
+
+<div id="app">
+    <h1><span class="js" style="color:white;">JS</span> Quiz</h1>
+    <button id="start" class="start">start</button>
+</div>
+
+
+<script>
+
+const questions = [
+    {
+        question : 'comment déclarer une variable qui ne peut pas etre modifiée ?',
+        answers : ['const','let','var'],
+        correct : 'const',
+    },
+    {
+        question : 'quelle méthode transforme une chaine de caractère en nombre ?',
+        answers : ['parseInt','parseFloat','let'],
+        correct : 'parseInt',
+    },
+    {
+        question : 'quel est le résultat de "2"+ 2 en javascript ?',
+        answers : ["4","22","erreur"],
+        correct : "22",
+    },
+    {
+        question : 'comment appelle t-on une fonction qui s\'appelle',
+        answers : ['fonction circulaire','fonction récurcive','fonction'],
+        correct : 'fonction récurcive',
+    },
+    {
+        question : 'quelle méthode permet de retirer le dernier élement en javascript ?',
+        answers : ['shift()', 'pop()', 'splice()'],
+        correct : 'pop()',
+    },
+    {
+        question : 'comment vérifier si une variable est un tableau en javascript ?',
+        answers : ['isType()', 'typeof()', 'array.isarray()'],
+        correct : 'array.isarray()',
+    },
+    {
+        question : 'quelle est la valeur de null lorsqu\'elle est convertit en javascript ?',
+        answers : ['0', '1', 'undefined','null'],
+        correct : '0',
+    },
+    {
+        question : 'comment accéder au premier élement d\'un tableau en javascript ?',
+        answers : ['myArray[1]', 'myArray[0]', 'myArray.first()'],
+        correct : 'myArray[0]',
+    },
+];
+
+console.log(questions);
+
+const TIMEOUT = 4000;
+
+const app = document.querySelector("#app");
+const startbutton = document.querySelector("#start");
+
+startbutton.addEventListener("click", startQuiz);
+
+function startQuiz(event) {
+    event.stopPropagation();
+    let currentQuestion = 0;
+    let score = 0;
+
+    
+    displayQuestion(currentQuestion);
+    
+       function clean() {
+        while (app.firstElementChild){
+            app.firstElementChild.remove();
+        }
+        const progress = getProgressBar(questions.length, currentQuestion);
+        app.appendChild(progress);
+       }
+
+    
+    function displayQuestion(index) {
+        clean();
+        const question = questions[index];
+
+        if (!question) {
+            displayFinishMessage();
+            return;
+        }
+
+        const title = getTitleElement(question.question);
+        app.appendChild(title);
+        const answersDiv= createAnswers(question.answers);
+        app.appendChild(answersDiv);
+
+        const submitButton= getSubmitButton();
+
+        submitButton.addEventListener("click", submit)
+
+        app.appendChild(submitButton);
+
+    }
+
+    function displayFinishMessage() {
+        const h1 = document.createElement("h1");
+        h1.innerText = "Bravo ! Tu as terminé le quiz."
+        const p = document.createElement("p");
+        p.innerText = `Tu as eu ${score} sur ${questions.length} point !`;
+        
+        app.appendChild(h1);
+        app.appendChild(p);
+    }
+
+function submit() {
+    const selectedAnswer= app.querySelector('input[name="answer"]:checked');
+
+    const value= selectedAnswer.value;
+    const question = questions[currentQuestion];
+    const isCorrect= question.correct === value
+   
+    if (isCorrect) {
+        score++;
+    }
+    showFeedback(isCorrect, question.correct, value);
+    displayNextQuestionButton();
+
+    const feedback = getFeedbackMessage(isCorrect, question.correct);
+    app.appendChild(feedback);
+
+    
+}
+
+function displayNextQuestionButton(callback) {
+    let remainingTimeout =  TIMEOUT;
+  
+
+    app.querySelector("button").remove();
+
+    const getButtonText = () => `Next (${remainingTimeout / 1000}s)`;
+    const nextButton = document.createElement("button");
+    nextButton.innerText = getButtonText();
+    app.appendChild(nextButton);
+
+  const  interval = setInterval(() => {
+        remainingTimeout -= 1000;
+         nextButton.innerText = getButtonText();
+    }, 1000);
+
+    const timeout = setTimeout(() => {
+        handleNextQuestion()
+    }, TIMEOUT);
+
+    const handleNextQuestion = () => {
+        currentQuestion++;
+        clearInterval(interval);
+        clearTimeout(timeout);
+        displayQuestion(currentQuestion);
+    }
+
+   
+
+    nextButton.addEventListener("click", () => {
+        handleNextQuestion()
+    })
+}
+
+
+
+    function createAnswers(answers) {
+       const answersDiv = document.createElement("div");
+       answersDiv.classList.add("answers");
+
+       for (const answer of answers){
+        const label= getAnswerElement(answer);
+        answersDiv.appendChild(label);
+       }
+        return answersDiv;
+    }
+}
+
+      function getTitleElement(text) {
+    const title = document.createElement("h3");
+    title.innerText= text;
+    return title;
+}
+
+function formatId(text) {
+    return text.replaceAll(" ", "_").toLowerCase();
+}
+
+function getAnswerElement(text) {
+    const label= document.createElement("label");
+    label.innerText =text;
+    const input = document.createElement("input");
+    const id = formatId(text)
+    input.id=id
+    label.htmlFor= id
+    input.setAttribute("type", "radio");
+    input.setAttribute("name", "answer");
+    input.setAttribute("value", text);
+    label.appendChild(input)
+    return label;
+
+}
+
+
+function getSubmitButton() {
+    const submitButton= document.createElement("button");
+    submitButton.innerText="submit";
+    return submitButton;
+}
+ 
+function showFeedback(isCorrect,correct, answer) {
+
+const correctAnswerId = formatId(correct);
+const  correctElement = document.querySelector(`label[for="${correctAnswerId}"]`);
+
+const selectedAnswerId = formatId(answer);
+const  selectedElement = document.querySelector(`label[for="${selectedAnswerId}"]`);
+
+
+correctElement.classList.add("correct");
+selectedElement.classList.add(isCorrect? "correct" : "incorrect");
+
+}
+
+function getFeedbackMessage(isCorrect, correct) {
+    const paragraph = document.createElement('p');
+    paragraph.innerText= isCorrect
+    ? "Bravo ! tu as eu la bonne reponse"
+    : `Désolé...mais la bonne réponse était ${correct}`;
+    return paragraph;
+}
+
+    function getProgressBar(max, value) {
+        const progress = document.createElement('progress');
+        progress.setAttribute("max", max)
+        progress.setAttribute("value", value)
+        return progress;
+
+     }
+</script>
+
+
+
+ <script src="index.js"></script>
+</body>
+</html>
